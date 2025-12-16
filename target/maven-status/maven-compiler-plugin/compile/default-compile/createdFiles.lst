@@ -1,0 +1,7 @@
+com\bulkemail\BulkEmailApplication.class
+com\bulkemail\controller\BulkEmailController.class
+com\bulkemail\entity\EmailLog$EmailStatus.class
+com\bulkemail\repository\EmailLogRepository.class
+com\bulkemail\entity\EmailLog.class
+com\bulkemail\controller\BulkEmailController$BulkEmailRequest.class
+com\bulkemail\service\EmailService.class
