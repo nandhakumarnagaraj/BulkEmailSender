@@ -25,28 +25,30 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmailAttachment {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "campaign_id")
-	private EmailCampaign campaign;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id", nullable = false)
+    private EmailCampaign campaign;
 
-	@Column(nullable = false)
-	private String fileName;
+    @Column(nullable = false)
+    private String fileName;
 
-	@Column(nullable = false)
-	private String fileType; // MIME type
+    @Column(nullable = false)
+    private String fileType; // MIME type
 
-	private Long fileSize;
+    private Long fileSize;
 
-	@Column(nullable = false)
-	private String storagePath; // File system or cloud storage path
+    @Column(nullable = false)
+    private String storagePath; // File system or cloud storage path
 
-	@Lob
-	@Column(columnDefinition = "MEDIUMBLOB")
-	private byte[] fileData; // Store small files in DB
+    @Lob
+    @Column(columnDefinition = "LONGBLOB") // Changed from MEDIUMBLOB for larger files
+    private byte[] fileData; // Store small files in DB
 
-	private LocalDateTime uploadedAt;
+    @Column(nullable = false, updatable = false)
+    @Builder.Default
+    private LocalDateTime uploadedAt = LocalDateTime.now();
 }

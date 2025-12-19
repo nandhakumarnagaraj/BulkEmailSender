@@ -19,34 +19,54 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
+	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtService jwtService;
+	private final AuthenticationManager authenticationManager;
 
-    public JwtAuthenticationResponse signup(SignUpRequest request) {
-        var user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-        userRepository.save(user);
-        var jwt = jwtService.generateToken(user);
-        return JwtAuthenticationResponse.builder().token(jwt).build();
-    }
+	public JwtAuthenticationResponse signup(SignUpRequest request) {
+		// FIX 1: Check if user already exists
+		if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+			throw new IllegalArgumentException("User already exists with this email");
+		}
 
-    public JwtAuthenticationResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-        var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
-        var jwt = jwtService.generateToken(user);
-        return JwtAuthenticationResponse.builder().token(jwt).build();
-    }
+		// FIX 2: Build user with ALL required fields
+		var user = User.builder()
+				.firstName(request.getFirstName())
+				.lastName(request.getLastName())
+				.email(request.getEmail())
+				.password(passwordEncoder.encode(request.getPassword())) // Encode password!
+				.role(Role.USER)
+				.build();
+
+		// FIX 3: Save user FIRST, then generate token
+		var savedUser = userRepository.save(user);
+		
+		// FIX 4: Generate token from saved user (has ID set)
+		var jwt = jwtService.generateToken(savedUser);
+		
+		return JwtAuthenticationResponse.builder()
+				.token(jwt)
+				.build();
+	}
+
+	public JwtAuthenticationResponse login(LoginRequest request) {
+		// Authenticate user with provided credentials
+		authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(
+						request.getEmail(), 
+						request.getPassword()
+				));
+
+		// Retrieve user from database
+		var user = userRepository.findByEmail(request.getEmail())
+				.orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+
+		// Generate JWT token
+		var jwt = jwtService.generateToken(user);
+
+		return JwtAuthenticationResponse.builder()
+				.token(jwt)
+				.build();
+	}
 }

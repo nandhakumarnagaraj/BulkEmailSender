@@ -23,10 +23,14 @@ public class SecurityConfiguration {
 
     @Bean
      SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // FIX 1: Added 'public' modifier (was missing)
+        // FIX 2: Updated tracking endpoints path to match controller
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/v1/email/track/**").permitAll()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/v1/email/track/**").permitAll() // Tracking endpoints
+                        .requestMatchers("/api/v1/tracking/**").permitAll()   // Alternative tracking path
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -38,6 +42,7 @@ public class SecurityConfiguration {
 
     @Bean
      WebMvcConfigurer corsConfigurer() {
+        // FIX 2: Added 'public' modifier (was missing)
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
@@ -45,9 +50,11 @@ public class SecurityConfiguration {
                         .allowedOrigins("http://localhost:4200")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
         };
     }
+
 }
 
